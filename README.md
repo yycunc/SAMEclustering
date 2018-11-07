@@ -37,7 +37,7 @@ data_SAME$Zheng.expr[1:5, 1:5]
 ```
 
 #### Perform individual clustering
-Here we perform single-cell clustering using four popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed from CIDR, tSNE + k-means and SIMLR clustering. To improve the performance of cluster ensemble, we take a subset of 4 out of 5 most diverse sets of clustering.
+Here we perform single-cell clustering using four popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. To improve the performance of cluster ensemble, we take a subset of 4 out of 5 most diverse sets of clustering.
 
 ```{r individual clustering for Baron_human4 dataset, results='hide', fig.show="hide", warning=FALSE}
 cluster.result <- individual_clustering(inputTags = data_SAME$Zheng.expr, datatype = "count", 
@@ -88,7 +88,7 @@ data_SAME$Biase.expr[1:5, 1:5]
 
 #### Perform individual clustering
 
-Here we perform single-cell clustering using four popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed from CIDR, tSNE + k-means and SIMLR clustering. Since there are only 49 cells in Biase dataset, the resolution parameter is set to 1.2 according to our benchmarking results.Four out of five most diverse sets of clustering were taken out for downstream cluster ensemble.
+Here we perform single-cell clustering using four popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. Since there are only 49 cells in Biase dataset, the resolution parameter is set to 1.2 according to our benchmarking results. Four out of five most diverse sets of clustering were taken out for downstream cluster ensemble.
 
 ```{r individual clustering for Biase dataset, results='hide', fig.show="hide", warning=FALSE}
 cluster.result <- individual_clustering(inputTags = data_SAME$Biase.expr, datatype = "FPKM",  
