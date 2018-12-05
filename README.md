@@ -6,7 +6,7 @@ Although several methods have been recently developed for clustering cell types 
 SAMEclustering is maintained by Yuchen Yang [yyuchen@email.unc.edu]
 
 ## News and Updates
-Nov 8, 2018
+Dec 5, 2018
 * Version 0.99.0 released
   + First offical release
   + It can work on Windows, Mac and Linux platforms
