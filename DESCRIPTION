@@ -1,0 +1,20 @@
+Package: SAMEclustering
+Type: Package
+Title: SAME: Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble for Single-cell RNA-seq Data
+Version: 0.99.0
+Date: 2018-11-08
+Author: Ruth Huh <rhuh@live.unc.edu>, Yuchen Yang <yyuchen@email.unc.edu>, Yun Li <yunli@med.unc.edu>
+Maintainer: Yuchen Yang <yyuchen@email.unc.edu>
+Description: SAME (Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble): Cluster ensemble for single-cell RNA-seq data
+Depends: R (>= 3.5.1)
+License: GPL (>= 3)
+Imports: Rcpp (>= 0.12.19), ADPclust, Rtsne, SC3, Seurat, e1071, SingleCellExperiment, SummarizedExperiment, parallel, S4Vectors, doParallel, doRNG, foreach, methods, cidr, stats, SIMLR, Matrix
+LinkingTo: Rcpp, RcppArmadillo
+Suggests: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0
+SystemRequirements: C++11
+NeedsCompilation: yes
+VignetteBuilder: knitr
+biocViews: Software, Clustering, Classification, SingleCell, Transcription, GUI, RNASeq, Transcriptomics
