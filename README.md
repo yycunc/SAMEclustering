@@ -19,7 +19,7 @@ install.packages("devtools)
 devtools::install_github("yycunc/SAMEclustering")
 ```
 
-## SAFEclustering Examples
+## SAMEclustering Examples
 Here we will provide examples using two datasets: one from Zheng *et al.*, (Nature Communications, 2016) and the other from Biase *et al.*, (Genome Research, 2014). Zheng dataset contains 500 human peripheral blood mononuclear cells (PBMCs) sequenced using GemCode platform, which consists of three cell types, CD56+ natural killer cells, CD19+ B cells and CD4+/CD25+ regulatory T cells. The original data can be downloaded from [10X GENOMICS website](https://support.10xgenomics.com/single-cell-gene-expression/datasets). The Biase dataset has 49 mouse embryo cells, which were sequenced by SMART-Seq and can be found at [NCBI GEO:GSE57249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57249).
 
 ### Load the data
