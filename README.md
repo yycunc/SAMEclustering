@@ -1,5 +1,5 @@
 # SAMEclustering
-SAME (Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble): Cluster ensemble for single-cell RNA-seq data
+SAMEclustering (Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble): Cluster ensemble for single-cell RNA-seq data
 
 Although several methods have been recently developed for clustering cell types using single-cell RNA-seq (scRNA-Seq) data, they utilize different characteristics of data and yield varying results in terms of both the number of clusters and actual cluster assignments. Here, we present SAME-clustering, Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble, a flexible, accurate and robust method for clustering scRNA-Seq data. SAMEclustering takes as input, results from multiple clustering methods, to build one consensus solution. SAME-clustering currently embeds five state-of-the-art methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR; and ensembles solutions from four diverse sets of five individual methods using EM algorithms.
 
