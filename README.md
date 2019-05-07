@@ -45,7 +45,7 @@ percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, n
 resolution = 0.9, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, SEED = 123)
 ```
 
-The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each column represents a cell. User can also extend SAMEclustering to other scRNA-seq clustering methods, by putting all clustering results into a M by N matrix with M clustering methods and N single cells.
+The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each column represents a cell. User can also extend SAMEclustering to other scRNA-seq clustering methods, by putting all clustering results into a *M* by *N* matrix with *M* clustering methods and *N* single cells.
 
 ```{r, message=FALSE}
 cluster.result[1:4, 1:10]
