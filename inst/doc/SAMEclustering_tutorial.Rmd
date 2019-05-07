@@ -43,13 +43,13 @@ data_SAME$Zheng.expr[1:5, 1:5]
 
 ## Perform individual clustering
 
-Here we perform single-cell clustering using five popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. To improve the performance of cluster ensemble, we take a subset of four out of five most diverse sets of clustering.
+Here we perform single-cell clustering using five popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. To improve the performance of cluster ensemble, we choose a maximally diverse set of four individual cluster solutions according to variation in pairwise Adjusted Rand Index (ARI).
 
 ```{r individual clustering for Zheng dataset, results='hide', fig.show="hide", warning=FALSE}
 cluster.result <- individual_clustering(inputTags = data_SAME$Zheng.expr, datatype = "count", percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, nPC.seurat = NULL, resolution = 0.9, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, SEED = 123)
 ```
 
-The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each colunm represents a cell. User can also extend SAFE-clustering to other scRNA-seq clustering methods, by putting all clustering results into a $M * N$ matrix with M clustering methods and N cells.
+The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each colunm represents a cell. User can also extend SAME-clustering to other scRNA-seq clustering methods, by putting all clustering results into a $M$ by $N$ matrix with $M$ clustering methods and $N$ single cells.
 
 ```{r, message=FALSE}
 cluster.result[1:4, 1:10]
@@ -59,19 +59,19 @@ cluster.result[1:4, 1:10]
 
 ## Cluster ensemble
 
-Using the clustering results generated in last step, we perform cluster ensemble using EM algorithm.
+Using the individual clustering results generated in last step, we perform cluster ensemble using EM algorithm.
 
 ```{r cluster ensemble for Zheng dataset, results='hide'}
 cluster.ensemble <- SAMEclustering(Y = t(cluster.result), rep = 3, SEED = 123)
 ```
 
-Function *SAMEclustering* will output a list for optimal clustering ensemble and clustering number based on AIC and BIC index, respectively. 
+Function *SAMEclustering* will output a list with optimal clusters and cluster number based on AIC and BIC index, respectively. 
 
 ```{r ensemble results for Zheng dataset, message=FALSE}
 cluster.ensemble
 ```
 
-We can compare the clustering results to the true labels using the Adjusted Rand Index (ARI)
+We can compare the clustering results to the true labels using the ARI. In our implementation, we use the clusters produced using the BIC criterion as our ensemble solution.
 
 ```{r ARI calculation for Zheng dataset}
 library(cidr)
@@ -80,7 +80,7 @@ library(cidr)
 head(data_SAME$Zheng.celltype)
 
 # Calculating ARI for cluster ensemble
-adjustedRandIndex(cluster.ensemble$AICcluster, data_SAME$Zheng.celltype)
+adjustedRandIndex(cluster.ensemble$BICcluster, data_SAME$Zheng.celltype)
 ```
 
 ***
@@ -98,7 +98,7 @@ data_SAME$Biase.expr[1:5, 1:5]
 
 ## Perform individual clustering
 
-Here we perform single-cell clustering using five popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. Since there are only 49 cells in Biase dataset, the resolution parameter is set to 1.2 according to our benchmarking results. Four out of five most diverse sets of clustering were taken out for downstream cluster ensemble.
+Here we perform single-cell clustering using five popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. Since there are only 49 cells in Biase dataset, the resolution parameter is set to 1.2. To improve the performance of cluster ensemble, we choose a maximally diverse set of four individual cluster solutions according to variation in pairwise ARI.
 
 ```{r individual clustering for Biase dataset, results='hide', fig.show="hide", warning=FALSE}
 cluster.result <- individual_clustering(inputTags = data_SAME$Biase.expr, datatype = "FPKM",  percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, nPC.seurat = NULL, seurat_min_cell = 200, resolution_min = 1.2, tSNE = TRUE, dimensions = 2, tsne_min_cells = 200, tsne_min_perplexity = 10, SIMLR = TRUE, diverse = TRUE, SEED = 123)
@@ -125,7 +125,7 @@ Compare the cluster ensemble results to the true labels.
 head(data_SAME$Biase.celltype)
 
 # Calculating ARI for cluster ensemble
-adjustedRandIndex(cluster.ensemble$AICcluster, data_SAME$Biase.celltype)
+adjustedRandIndex(cluster.ensemble$BICcluster, data_SAME$Biase.celltype)
 ```
 
 ***
