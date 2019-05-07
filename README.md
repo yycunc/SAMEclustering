@@ -14,7 +14,7 @@ Dec 5, 2018
 ## Installation
 You can install SAMEclustering from github with:
 ```{r install}
-install.packages("devtools)
+install.packages("devtools")
 
 devtools::install_github("yycunc/SAMEclustering")
 ```
