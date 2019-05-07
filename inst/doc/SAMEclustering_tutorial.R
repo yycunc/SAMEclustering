@@ -32,7 +32,7 @@ library(cidr)
 head(data_SAME$Zheng.celltype)
 
 # Calculating ARI for cluster ensemble
-adjustedRandIndex(cluster.ensemble$AICcluster, data_SAME$Zheng.celltype)
+adjustedRandIndex(cluster.ensemble$BICcluster, data_SAME$Zheng.celltype)
 
 
 # Biase dataset
@@ -61,4 +61,4 @@ library(cidr)
 head(data_SAME$Biase.celltype)
 
 # Calculating ARI for cluster ensemble
-adjustedRandIndex(cluster.ensemble$AICcluster, data_SAME$Biase.celltype)
+adjustedRandIndex(cluster.ensemble$BICcluster, data_SAME$Biase.celltype)
