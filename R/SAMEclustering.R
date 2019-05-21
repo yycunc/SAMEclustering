@@ -383,7 +383,7 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
   if(SIMLR == TRUE){
     message("Performing tSNE + k-means clustering...")
     
-    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, datatype = datatype, percent_dropout = percent_dropout, k.min = 2, k.max = cluster_number, SEED = SEED)
+    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, datatype = datatype, percent_dropout = percent_dropout, k.min = 2, k.max = max(cluster_number), SEED = SEED)
     cluster_results <- rbind(cluster_results, simlrOUTPUT$y$cluster)
   }
   
