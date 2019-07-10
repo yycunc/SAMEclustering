@@ -466,7 +466,7 @@ SAMEclustering <- function(Y, MAX = NULL, rep, SEED = 1){
   
   #number of clusters for each of the H clustering methods
   if(is.null(MAX)){
-    MAX <- max(Y)
+    MAX <- max(Y[!is.na(Y)])
   }
   
   for(M in 2:MAX){
@@ -507,7 +507,7 @@ SAMEclustering <- function(Y, MAX = NULL, rep, SEED = 1){
   AICresultsummary <- paste("The final optimal k is", numclus[which(AIC == min(AIC))], "which has the lowest AIC of", min(AIC), "resulting in an ARI of", ARI[which(AIC == min(AIC))])
   BICcluster <- clusterresults[[which(BIC == min(BIC))]]
   AICcluster <- clusterresults[[which(AIC == min(AIC))]]
-  result <- list(AICcluster = AICcluster, final_k_AIC = final_k_AIC, BICcluster = BICcluster, final_k_BIC = final_k_BIC)
+  result <- list(AIC_result_summary = AICresultsummary, AICcluster = AICcluster, final_k_AIC = final_k_AIC, BIC_result_summary = BICresultsummary, BICcluster = BICcluster, final_k_BIC = final_k_BIC)
   return(result)
 }
 
