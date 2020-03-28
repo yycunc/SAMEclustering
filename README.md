@@ -118,4 +118,5 @@ head(data_SAME$Biase.celltype)
 adjustedRandIndex(cluster.ensemble$BICcluster, data_SAME$Biase.celltype)
 ```
 
-
+## Citation
+Huh, R., Yang, Y., Jiang, Y., Shen, Y., Li, Y. (2020) SAME-clustering: Single-cell Aggregated Clustering via Mixture Model Ensemble. *Nucleic Acids Research*, 48: 86-95. [PMID: 31777938].
