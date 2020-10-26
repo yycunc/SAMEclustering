@@ -8,6 +8,8 @@ SAMEclustering is maintained by Ruth Huh [rhuh@live.unc.edu], Yuchen Yang [yyuch
 ## News and Updates
 Oct 26, 2020
 * Version 1.00
+  + The Seurat version used in SAMEclustering is updated to v3. Seurat v2 is no longer compatible
+  + Only count data is acceptable by SAMEclustering. Other formats, such as FPKM, CPM and RPKM are no longer compatible.
   + Fix the typing error in the message delivered during the running
 
 Dec 5, 2018
