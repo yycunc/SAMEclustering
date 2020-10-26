@@ -10,21 +10,15 @@
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom doRNG %dorng%
 #' @importFrom foreach foreach %dopar%
-sc3_SAME <- function(inputTags, datatype, gene_filter, svm_num_cells, SEED){
+sc3_SAME <- function(inputTags, gene_filter, svm_num_cells, SEED){
   exp_cell_exprs <- NULL
   sc3OUTPUT <- NULL
   
   # cell expression
-  if (datatype == "count") {
-    ### For count data, it would be normalized by the total cound number and then log2 transformed
-    exp_cell_exprs <- SingleCellExperiment(assays = list(counts = inputTags))
-    normcounts(exp_cell_exprs) <- t(t(inputTags)/colSums(inputTags))*1000000
-    logcounts(exp_cell_exprs) <- log2(normcounts(exp_cell_exprs) + 1)
-  } else if (datatype == "CPM" || datatype == "FPKM" || datatype == "RPKM" || datatype == "TPM") {
-    ### For CPM, FPKM, RPKM or TPM data, it would be log2 transformed
-    exp_cell_exprs <- SingleCellExperiment(assays = list(normcounts = inputTags))
-    logcounts(exp_cell_exprs) <- log2(normcounts(exp_cell_exprs) + 1)
-  }
+  ### For count data, it would be normalized by the total cound number and then log2 transformed
+  exp_cell_exprs <- SingleCellExperiment(assays = list(counts = inputTags))
+  normcounts(exp_cell_exprs) <- t(t(inputTags)/colSums(inputTags))*1000000
+  logcounts(exp_cell_exprs) <- log2(normcounts(exp_cell_exprs) + 1)
   
   rowData(exp_cell_exprs)$feature_symbol <- rownames(exp_cell_exprs)
   exp_cell_exprs <- exp_cell_exprs[!duplicated(rowData(exp_cell_exprs)$feature_symbol), ]
@@ -52,7 +46,7 @@ sc3_SAME <- function(inputTags, datatype, gene_filter, svm_num_cells, SEED){
 }
 
 #' @importFrom cidr scDataConstructor determineDropoutCandidates wThreshold scDissim scPCA nPC scCluster
-cidr_SAME <- function(inputTags, datatype, percent_dropout, nPC.cidr, SEED){
+cidr_SAME <- function(inputTags, percent_dropout, nPC.cidr, SEED){
   set.seed(SEED)
   
   cidrOUTPUT <- NULL
@@ -63,12 +57,7 @@ cidr_SAME <- function(inputTags, datatype, percent_dropout, nPC.cidr, SEED){
     inputTags_cidr <- inputTags[-c(which(dropouts <= percent_dropout), which(dropouts >= 100 - percent_dropout)),]
   }
   
-  if (datatype == "count"){
-    cidrOUTPUT <- scDataConstructor(inputTags_cidr, tagType = "raw")
-  }
-  else if (datatype == "CPM" || datatype == "FPKM" || datatype == "RPKM" || datatype == "TPM"){
-    cidrOUTPUT <- scDataConstructor(inputTags_cidr, tagType = "cpm")
-  }
+  cidrOUTPUT <- scDataConstructor(inputTags_cidr, tagType = "raw")
   cidrOUTPUT <- determineDropoutCandidates(cidrOUTPUT)
   cidrOUTPUT <- wThreshold(cidrOUTPUT)
   cidrOUTPUT <- scDissim(cidrOUTPUT)
@@ -91,69 +80,40 @@ cidr_SAME <- function(inputTags, datatype, percent_dropout, nPC.cidr, SEED){
 
 #' @import Seurat
 #' @importFrom methods .hasSlot
-seurat_SAME <- function(inputTags, datatype, nPC.seurat, resolution, seurat_min_cell, resolution_min, SEED){
+seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, nPC.seurat, resolution, SEED){
   seuratOUTPUT <- NULL
   
   # Initialize the Seurat object with the raw data (non-normalized data)
   # Keep all genes expressed in >= 3 cells, keep all cells with >= 200 genes
-  seuratOUTPUT <- CreateSeuratObject(raw.data = inputTags, min.cells = 3, min.genes = 200, project = "single-cell clustering")
+  seuratOUTPUT <- CreateSeuratObject(raw.data = inputTags, min.cells = 0, min.genes = low.genes, project = "single-cell clustering")
   
-  # Perform log-normalization, first scaling each cell to a total of 1e4 molecules (as in Macosko et al. Cell 2015)
-  if (datatype == "count"){
-    seuratOUTPUT = NormalizeData(object = seuratOUTPUT, normalization.method = "LogNormalize", scale.factor = 10000)
-  } else if (datatype == "CPM" || datatype == "FPKM" || datatype == "RPKM" || datatype == "TPM"){
-    raw.data <- GetAssayData(object = seuratOUTPUT, slot = "raw.data")
-    normalized.data <- log(raw.data+1)
-    colnames(x = normalized.data) <- colnames(x = raw.data)
-    rownames(x = normalized.data) <- rownames(x = raw.data)
-    seuratOUTPUT <- SetAssayData(object = seuratOUTPUT, assay.type = "RNA",slot = "data", new.data = normalized.data)
+  # Filter out the cells expressing too few or too many genes
+  if (nGene_filter == TRUE){
+     seuratOUTPUT <- subset(object = seuratOUTPUT, subset = nFeature_RNA > low.genes & nFeature_RNA < high.genes)
   }
   
-  # Detection of variable genes across the single cells
-  seuratOUTPUT = FindVariableGenes(object = seuratOUTPUT, mean.function = ExpMean, dispersion.function = LogVMR,
-                                   x.low.cutoff = 0.0125, x.high.cutoff = 3, y.cutoff = 0.5)
+  # Perform log-normalization, first scaling each cell to a total of 1e4 molecules (as in Macosko et al. Cell 2015)
+  seuratOUTPUT = NormalizeData(object = seuratOUTPUT, normalization.method = "LogNormalize", scale.factor = 10000)
   
-  # Regress out unwanted sources of variation
-  seuratOUTPUT <- ScaleData(object = seuratOUTPUT, vars.to.regress = c("nUMI"))
+  # Detection of variable genes across the single cells
+  seuratOUTPUT = FindVariableFeatures(object = seuratOUTPUT, selection.method = "vst", nfeatures = 2000)
+  
+  # Scale data
+  all.genes <- rownames(seuratOUTPUT)
+  seuratOUTPUT <- ScaleData(object = seuratOUTPUT, features = all.genes)
   
   ### Perform linear dimensional reduction
   if (nPC.seurat <= 20){
-    seuratOUTPUT <- RunPCA(object = seuratOUTPUT, pc.genes = seuratOUTPUT@var.genes, do.print = FALSE)
+    seuratOUTPUT <- RunPCA(object = seuratOUTPUT, features = VariableFeatures(object = seuratOUTPUT), npcs = 20, seed.use = SEED, verbose = FALSE)
+    seuratOUTPUT <- FindNeighbors(seuratOUTPUT, dims = 1:20, verbose = FALSE)
   } else {
-    seuratOUTPUT <- RunPCA(object = seuratOUTPUT, pc.genes = seuratOUTPUT@var.genes, pcs.compute = nPC.seurat, do.print = FALSE)
+    seuratOUTPUT <- RunPCA(object = seuratOUTPUT, features = VariableFeatures(object = seuratOUTPUT), npcs = nPC.seurat, seed.use = SEED, verbose = FALSE)
+    seuratOUTPUT <- FindNeighbors(seuratOUTPUT, dims = 1:20, verbose = FALSE)
   }
   
+  seuratOUTPUT <- FindClusters(object = seuratOUTPUT, resolution = resolution, verbose = FALSE)
   
-  if (length(inputTags[1,]) >= seurat_min_cell){
-    ### Determine statistically significant principal components
-    # NOTE: This process can take a long time for big datasets, comment out for expediency.
-    # More approximate techniques such as those implemented in PCElbowPlot() can be used to reduce computation time
-    # Here we chooes the same number of PCs used in CIDR
-    
-    ### Clustering the cells by Seurat
-    seuratOUTPUT <- FindClusters(object = seuratOUTPUT, reduction.type = "pca", dims.use = 1:nPC.seurat, algorithm = 3,
-                                 resolution = resolution, print.output = FALSE, random.seed = SEED)
-  } else {
-    resolution <- resolution_min
-    seuratOUTPUT <- FindClusters(object = seuratOUTPUT, reduction.type = "pca", dims.use = 1:nPC.seurat, algorithm = 3,
-                                 resolution = resolution_min, print.output = FALSE, random.seed = SEED)
-  }
-  
-  ### Complementing the missing data
-  cells_dropout <- NULL
-  num_genes <- colSums(inputTags > 0)
-  cells_dropout <- names(num_genes[which(num_genes <= 200)])
-  if (length(cells_dropout != 0)){
-    seurat_output <- matrix(NA, ncol = ncol(inputTags), byrow = TRUE)
-    colnames(seurat_output) <- colnames(inputTags)
-    seurat_retained <- t(as.matrix(as.numeric(seuratOUTPUT@ident)))
-    colnames(seurat_retained) <- colnames(seuratOUTPUT@data)
-    for (i in 1:ncol(seurat_retained)){
-      seurat_output[1,colnames(seurat_retained)[i]] <- seurat_retained[1,colnames(seurat_retained)[i]]
-    }
-  } else {
-    seurat_output <- t(as.matrix(as.numeric(seuratOUTPUT@ident)))
-  }
+  seurat_output <- t(as.matrix(as.numeric(seuratOUTPUT@active.ident)))
   
   return(seurat_output)
 }
@@ -162,7 +122,7 @@ seurat_SAME <- function(inputTags, datatype, nPC.seurat, resolution, seurat_min_
 #' @importFrom ADPclust adpclust
 #' @importFrom S4Vectors var
 #' @importFrom stats kmeans
-tSNE_kmeans_SAME <- function(inputTags, datatype, percent_dropout, dimensions, perplexity, k.min, k.max, var_genes, SEED){
+tSNE_kmeans_SAME <- function(inputTags, percent_dropout, dimensions, perplexity, k.min, k.max, var_genes, SEED){
   input_lcpm <- NULL
   tsne_input <- NULL
   tsne_output <- NULL
@@ -177,17 +137,11 @@ tSNE_kmeans_SAME <- function(inputTags, datatype, percent_dropout, dimensions, p
   }
   
   ### Data tranformation
-  if (datatype == "count") {
-    ### If the input data is original count data or CPM, it would be tranformed to CPM
-    tsne_input <- log2(t(t(inputTags_tsne)/colSums(inputTags_tsne))*1000000+1)
-  } else if (datatype == "CPM" || datatype == "FPKM" || datatype == "RPKM" || datatype == "TPM") {
-    ### If the input data is FPKM or RPKM, we use the transformed TPM data generated before as the input
-    tsne_input <- log2(inputTags_tsne + 1)
-  }
+  ### If the input data is original count data or CPM, it would be tranformed to CPM
+  tsne_input <- log2(t(t(inputTags_tsne)/colSums(inputTags_tsne))*1000000+1)
   
   if (is.null(var_genes)){
     set.seed(SEED)
-    
     tsne_output <- Rtsne(t(tsne_input), dims = dimensions, perplexity = perplexity, check_duplicates = FALSE)
   } else{
     se_genes = rep(NA, nrow(tsne_input))
@@ -211,7 +165,7 @@ tSNE_kmeans_SAME <- function(inputTags, datatype, percent_dropout, dimensions, p
 }
 
 #' @importFrom SIMLR SIMLR_Estimate_Number_of_Clusters SIMLR SIMLR_Large_Scale
-SIMLR_SAME <- function(inputTags, datatype, percent_dropout, k.min, k.max, SEED){
+SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
   set.seed(SEED)
   
   #X input is genebycell matrix
@@ -225,11 +179,7 @@ SIMLR_SAME <- function(inputTags, datatype, percent_dropout, k.min, k.max, SEED)
   
   k_range <- k.min:k.max
   
-  if (datatype == "count") {
-    best_k=SIMLR_Estimate_Number_of_Clusters(log10(t(t(inputTags_simlr)/colSums(inputTags_simlr))*1000000+1), NUMC = k_range, cores.ratio = 1)
-  } else if (datatype == "CPM" || datatype == "FPKM" || datatype == "RPKM" || datatype == "TPM"){
-    best_k=SIMLR_Estimate_Number_of_Clusters(log10(inputTags_simlr+1), NUMC = k_range, cores.ratio = 1)
-  }
+  best_k=SIMLR_Estimate_Number_of_Clusters(log10(t(t(inputTags_simlr)/colSums(inputTags_simlr))*1000000+1), NUMC = k_range, cores.ratio = 1)
   k <- which.min(best_k$K1) + k_range[1] - 1
   
   if (dim(inputTags_simlr)[2] < 1000) {
@@ -247,18 +197,16 @@ SIMLR_SAME <- function(inputTags, datatype, percent_dropout, k.min, k.max, SEED)
 #' SC3, CIDR, Seurat, tSNE+kmeans and SIMLR.
 #'
 #' @param inputTags a G*N matrix with G genes and N cells.
-#' @param datatype defines the type of data, which could be "count", "CPM", "RPKM" and "FPKM".
-#' Default is "count".
 #' @param mt_filter is a boolean variable that defines whether to filter outlier cells according to mitochondrial gene percentage.
-#' Default is "FALSE".
-#' @param low.mt defines a low cutoff of mitochondrial percentage (Default is -Inf) that cells having lower percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}.
-#' @param high.mt defines a high cutoff of mitochondrial percentage (Default is 0.05) that cells having higher percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}.
+#' Default is "TRUE".
+#' @param mt.pattern defines the pattern of mitochondrial gene names in the data, for example, \code{mt,pattern = "^MT-"} for human and \code{mt,pattern = "^mt-"} for mouse. Only applied when \code{mt_filter = TRUE}
+#' Default is \code{mt,pattern = "^MT-"}.
+#' @param mt.cutoff defines a high cutoff of mitochondrial percentage (Default is 0.1) that cells having higher percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}.
 #' @param percent_dropout defines a low cutoff of gene percentage that genes expressed in less than \code{percent_dropout}% or more than (100 - \code{percent_dropout})% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. 
 # Default is 10.
 #' @param SC3 is a boolean variable that defines whether to cluster cells using SC3 method.
 #' Default is "TRUE".
-#' @param gene_filter is a boolean variable that defines whether to perform gene filtering
-#' before SC3 clustering, when \code{SC3 = TRUE}.
+#' @param gene_filter is a boolean variable that defines whether to perform gene filtering before SC3 clustering, when \code{SC3 = TRUE}.
 #' @param svm_num_cells, if \code{SC3 = TRUE}, then defines the mimimum number of cells above which SVM will be run.
 #' @param CIDR is a boolean parameter that defines whether to cluster cells using CIDR method.
 #' Default is "TRUE".
@@ -266,13 +214,13 @@ SIMLR_SAME <- function(inputTags, datatype, percent_dropout, k.min, k.max, SEED)
 #' Default value is esimated by \code{nPC} of \code{CIDR}.
 #' @param Seurat is a boolean variable that defines whether to cluster cells using Seurat method.
 #' Default is "TRUE".
+#' @param nGene_filter is a boolean variable that defines whether to filter outlier cells according to unique gene count before Seurat clustering.
+#' Default is "TRUE".
+#' @param low.genes defines is a low cutoff of unique gene counts (Default is 200) that cells expressing less than 200 genes are filtered out, when \code{nGene_filter = TRUE}. 
+#' @param high.genes defines is a high cutoff of unique gene counts (Default is 8000) that cells expressing more than 8000 genes are filtered out, when \code{nGene_filter = TRUE}. 
 #' @param nPC.seurat defines the number of principal components used in Seurat clustering, when \code{Seurat = TRUE}.
 #' Default is \code{nPC.seurat = nPC.cidr}.
-#' @param resolution defines the value of resolution used in Seurat clustering, when \code{Seurat = TRUE}.
-#' @param seurat_min_cell defines the mimimum number of cells in input dataset below which
-#' \code{resolution} is set to 1.2, when \code{Seurat = TRUE}.
-#' @param resolution_min defines the resolution used in Seurat clustering for small dataset,
-#' when \code{Seurat == TRUE} and cell number of input file < \code{seurat_min_cell}.
+#' @param resolution defines the value of resolution used in Seurat clustering, when \code{Seurat = TRUE}. Default is \code{resolution = 0.7}.
 #' @param tSNE is a boolean variable that defines whether to cluster cells using t-SNE + k-means method.
 #' Default is "TRUE".
 #' @param dimensions sets the number of dimensions wanted to be retained in t-SNE step. Default is 3.
@@ -300,15 +248,11 @@ SIMLR_SAME <- function(inputTags, datatype, percent_dropout, k.min, k.max, SEED)
 #' # Zheng dataset
 #' # Run individual_clustering
 #' cluster.result <- individual_clustering(inputTags=data_SAME$Zheng.expr, SEED=123)
-#'
-#' # Biase dataset
-#' # Run individual_clustering
-#' cluster.result <- individual_clustering(inputTags = data_SAME$Biase.expr, datatype = "FPKM", seurat_min_cell = 200, resolution_min = 1.2, tsne_min_cells = 200, tsne_min_perplexity = 10, SEED=123)
 #' @importFrom cidr adjustedRandIndex
 #' @export
-individual_clustering <- function(inputTags, datatype = "count", mt_filter = FALSE, low.mt = -Inf, high.mt = 0.05, percent_dropout = 10,
+individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT-", mt.cutoff = 0.1, percent_dropout = 10,
                                   SC3 = TRUE, gene_filter = FALSE, svm_num_cells = 5000, CIDR = TRUE, nPC.cidr = NULL,
-                                  Seurat = TRUE, nPC.seurat = NULL, resolution = 0.9, seurat_min_cell = 200, resolution_min = 1.2,
+                                  Seurat = TRUE, nGene_filter = TRUE, low.genes = 200, high.genes = 8000, nPC.seurat = NULL, resolution = 0.7, 
                                   tSNE = TRUE, dimensions = 3, perplexity = 30, tsne_min_cells = 200, tsne_min_perplexity = 10, var_genes = NULL,
                                   SIMLR = TRUE, diverse = TRUE, SEED = 1){
   
@@ -318,17 +262,16 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
   
   # Filter out cells that have mitochondrial genes percentage over 5%
   if (mt_filter == TRUE){
-    mito.genes <- grep(pattern = "MT-", x = rownames(x = inputTags), value = TRUE)
+    mito.genes <- grep(pattern = mt.pattern, x = rownames(x = inputTags), value = TRUE)
     percent.mito <- Matrix::colSums(inputTags[mito.genes, ])/Matrix::colSums(inputTags)
-    inputTags <- inputTags[,which(percent.mito >= low.mt & percent.mito <= high.mt)]
+    inputTags <- inputTags[,which(percent.mito <= mt.cutoff)]
   }
   
   ##### SC3
   if(SC3 == TRUE){
     message("Performing SC3 clustering...")
     
-    sc3OUTPUT <- sc3_SAME(inputTags = inputTags, datatype = datatype, gene_filter = gene_filter,
-                          svm_num_cells = svm_num_cells, SEED = SEED)
+    sc3OUTPUT <- sc3_SAME(inputTags = inputTags, gene_filter = gene_filter, svm_num_cells = svm_num_cells, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(sc3OUTPUT), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(c(sc3OUTPUT)))
   }
@@ -338,7 +281,7 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
   if(CIDR == TRUE){
     message("Performing CIDR clustering...")
     
-    cidrOUTPUT <- cidr_SAME(inputTags = inputTags, datatype = datatype, percent_dropout = percent_dropout, nPC.cidr = nPC.cidr, SEED = SEED)
+    cidrOUTPUT <- cidr_SAME(inputTags = inputTags, percent_dropout = percent_dropout, nPC.cidr = nPC.cidr, SEED = SEED)
     
     if(is.null(nPC.cidr)) {
       nPC.cidr <- cidrOUTPUT@nPC
@@ -357,8 +300,8 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
       nPC.seurat <- nPC.cidr
     }
     
-    seurat_output <- seurat_SAME(inputTags = inputTags, datatype = datatype, nPC.seurat = nPC.seurat, resolution = resolution,
-                                 seurat_min_cell = seurat_min_cell, resolution_min = resolution_min, SEED = SEED)
+    seurat_output <- seurat_SAME(inputTags = inputTags, nGene_filter = nGene_filter, low.genes = low.genes, high.genes = high.genes, 
+                                 nPC.seurat = nPC.seurat, resolution = resolution, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(seurat_output), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(!is.na(seurat_output)))
   }
@@ -373,7 +316,7 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
       perplexity = tsne_min_perplexity
     }
     
-    tsne_kmeansOUTPUT <- tSNE_kmeans_SAME(inputTags = inputTags, datatype = datatype, percent_dropout = percent_dropout, dimensions = dimensions,
+    tsne_kmeansOUTPUT <- tSNE_kmeans_SAME(inputTags = inputTags, percent_dropout = percent_dropout, dimensions = dimensions,
                                           perplexity = perplexity, k.min = 2, k.max = max(cluster_number), var_genes = var_genes, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(tsne_kmeansOUTPUT$cluster), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(as.numeric(tsne_kmeansOUTPUT$cluster)))
@@ -383,7 +326,7 @@ individual_clustering <- function(inputTags, datatype = "count", mt_filter = FAL
   if(SIMLR == TRUE){
     message("Performing SIMLR clustering...")
     
-    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, datatype = datatype, percent_dropout = percent_dropout, k.min = 2, k.max = max(cluster_number), SEED = SEED)
+    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, percent_dropout = percent_dropout, k.min = 2, k.max = max(cluster_number), SEED = SEED)
     cluster_results <- rbind(cluster_results, simlrOUTPUT$y$cluster)
   }
   
