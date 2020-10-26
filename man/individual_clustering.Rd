@@ -13,9 +13,9 @@ individual_clustering
 This function performs single-cell clustering using five state-of-the-art methods, SC3, CIDR, Seurat, tSNE+kmeans and SIMLR.
 }
 \usage{
-individual_clustering(inputTags, datatype = "count", mt_filter = FALSE, low.mt = -Inf, high.mt = 0.05, 
+individual_clustering(inputTags, mt_filter = TRUE, mt.pattern = "^MT-", mt.cutoff = 0.1, 
 percent_dropout = 10, SC3 = TRUE, gene_filter = FALSE, svm_num_cells = 5000, CIDR = TRUE, nPC.cidr = NULL, 
-Seurat = TRUE, nPC.seurat = NULL, resolution = 0.9, seurat_min_cell = 200, resolution_min = 1.2, 
+Seurat = TRUE, nGene_filter = TRUE, low.genes = 200, high.genes = 8000, nPC.seurat = NULL, resolution = 0.7, 
 tSNE = TRUE, dimensions = 3, perplexity = 30, tsne_min_cells = 200, tsne_min_perplexity = 10, var_genes = NULL, 
 SIMLR = TRUE, diverse = TRUE, SEED = 1)
 }
@@ -24,17 +24,14 @@ SIMLR = TRUE, diverse = TRUE, SEED = 1)
   \item{inputTags}{
 a G*N matrix with G genes and N cells.
 }
-  \item{datatype}{
-defines the type of data, which could be "count", "CPM", "RPKM" and "FPKM". Default is "count".
-}
   \item{mt_filter}{
-is a boolean variable that defines whether to filter outlier cells according to mitochondrial gene percentage. Default is "FALSE".
+is a boolean variable that defines whether to filter outlier cells according to mitochondrial gene percentage. Default is "TRUE".
 }
-  \item{low.mt}{
-defines a low cutoff of mitochondrial percentage (Default is -Inf) that cells having lower percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}.
+  \item{mt.pattern}{
+defines the pattern of mitochondrial gene names in the data, for example, \code{mt.pattern = "^MT-"} for human and \code{mt.pattern = "^mt-"} for mouse. Only applied when \code{mt_filter = TRUE}. Default is \code{mt.pattern = "^MT-"}.
 }
-  \item{high.mt}{
-defines a high cutoff of mitochondrial percentage (Default is 0.05) that cells having higher percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}
+  \item{mt.cutoff}{
+defines a high cutoff of mitochondrial percentage (Default is 0.1) that cells having higher percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}
 }
   \item{percent_dropout}{
 defines a low cutoff of gene percentage that genes expressed in less than \code{percent_dropout}\% or more than (100 - \code{percent_dropout})\% of cells are removed for CIDR, tSNE + k-means, and SIMLR clustering. Default is 10.
@@ -57,17 +54,20 @@ defines the number of principal coordinates used in CIDR clustering, when \code{
   \item{Seurat}{
 is a boolean variable that defines whether to cluster cells using Seurat method. Default is "TRUE".
 }
+  \item{nGene_filter}{
+is a boolean variable that defines whether to filter outlier cells according to unique gene count before Seurat clustering. Default is "TRUE".
+}
+  \item{low.genes}{
+defines a low cutoff of unique gene counts (Default is 200) that cells expressing less than 200 genes are filtered out, when \code{nGene_filter = TRUE}.
+}
+  \item{high.genes}{
+defines a high cutoff of unique gene counts (Default is 8000) that cells expressing more than 8000 genes are filtered out, when \code{nGene_filter = TRUE}.
+}
   \item{nPC.seurat}{
 defines the number of principal components used in Seurat clustering, when \code{Seurat = TRUE}. Default is \code{nPC.seurat = nPC.cidr}.
 }
   \item{resolution}{
-defines the value of resolution used in Seurat clustering, when \code{Seurat = TRUE}.
-}
-  \item{seurat_min_cell}{
-defines the mimimum number of cells in input dataset below which \code{resolution} is set to 1.2, when \code{Seurat = TRUE}.
-}
-  \item{resolution_min}{
-defines the resolution used in Seurat clustering for small dataset, when \code{Seurat == TRUE} and cell number of input file < \code{seurat_min_cell}.
+defines the value of resolution used in Seurat clustering, when \code{Seurat = TRUE}. Default is \code{resolution = 0.7}.
 }
   \item{tSNE}{
 is a boolean variable that defines whether to cluster cells using t-SNE + k-means method. Default is "TRUE".
@@ -101,7 +101,7 @@ sets the seed of the random number generator. Setting the seed to a fixed value 
 a matrix of indiviudal clustering results is output, where each row represents the cluster results of each method.
 }
 \references{
-Ruth Huh, Yuchen Yang, Yun Li. SAME. 2017
+Huh, R., Yang, Y., Jiang, Y., Shen, Y., Li, Y. (2020) SAME-clustering: Single-cell Aggregated Clustering via Mixture Model Ensemble. Nucleic Acid Research, 48: 86-95
 }
 \author{
 Ruth Huh <rhuh@live.unc.edu>, Yuchen Yang <yyuchen@email.unc.com>, Yun Li <yunli@med.unc.edu>
@@ -113,10 +113,6 @@ data("data_SAME")
 # Zheng dataset
 # Run individual_clustering
 cluster.result <- individual_clustering(inputTags=data_SAME$Zheng.expr, SEED=123)
-
-# Biase dataset
-# Run individual_clustering
-cluster.result <- individual_clustering(inputTags = data_SAME$Biase.expr, datatype = "FPKM", seurat_min_cell = 200, resolution_min = 1.2, tsne_min_cells = 200, tsne_min_perplexity = 10, SEED=123)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
