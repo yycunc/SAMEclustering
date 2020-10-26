@@ -2,6 +2,8 @@ SAMEclustering News
 
 SAMEclustering 1.00 (Release date: 2020-10-26):
 
+  * The Seurat version used in SAMEclustering is updated to v3. Seurat v2 is no longer compatible
+  * Only count data is acceptable by SAMEclustering. Other formats, such as FPKM, CPM and RPKM are no longer compatible.
   * Fix the typing error in the message delivered during the running
 
 SAMEclustering 0.99.0 (Release date: 2018-11-06):
