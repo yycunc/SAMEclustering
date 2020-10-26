@@ -199,8 +199,8 @@ SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
 #' @param inputTags a G*N matrix with G genes and N cells.
 #' @param mt_filter is a boolean variable that defines whether to filter outlier cells according to mitochondrial gene percentage.
 #' Default is "TRUE".
-#' @param mt.pattern defines the pattern of mitochondrial gene names in the data, for example, \code{mt,pattern = "^MT-"} for human and \code{mt,pattern = "^mt-"} for mouse. Only applied when \code{mt_filter = TRUE}
-#' Default is \code{mt,pattern = "^MT-"}.
+#' @param mt.pattern defines the pattern of mitochondrial gene names in the data, for example, \code{mt.pattern = "^MT-"} for human and \code{mt.pattern = "^mt-"} for mouse. Only applied when \code{mt_filter = TRUE}
+#' Default is \code{mt.pattern = "^MT-"}.
 #' @param mt.cutoff defines a high cutoff of mitochondrial percentage (Default is 0.1) that cells having higher percentage of mitochondrial gene are filtered out, when \code{mt_filter = TRUE}.
 #' @param percent_dropout defines a low cutoff of gene percentage that genes expressed in less than \code{percent_dropout}% or more than (100 - \code{percent_dropout})% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. 
 # Default is 10.
