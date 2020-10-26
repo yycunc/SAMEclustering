@@ -113,7 +113,18 @@ seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, n
   
   seuratOUTPUT <- FindClusters(object = seuratOUTPUT, resolution = resolution, verbose = FALSE)
   
-  seurat_output <- t(as.matrix(as.numeric(seuratOUTPUT@active.ident)))
+  ### Complementing the missing data
+  if (length(seuratOUTPUT@active.ident) < ncol(inputTags)){
+    seurat_output <- matrix(NA, ncol = ncol(inputTags), byrow = T)
+    colnames(seurat_output) <- colnames(inputTags)
+    seurat_retained <- t(as.matrix(as.numeric(seuratOUTPUT@active.ident)))
+    colnames(seurat_retained) <- names(seuratOUTPUT@active.ident)
+    for (i in 1:ncol(seurat_retained)){
+      seurat_output[1,colnames(seurat_retained)[i]] <- seurat_retained[1,colnames(seurat_retained)[i]]
+    }
+  } else {
+    seurat_output <- t(as.matrix(as.numeric(seuratOUTPUT@active.ident)))
+  }
   
   return(seurat_output)
 }
@@ -129,7 +140,7 @@ tSNE_kmeans_SAME <- function(inputTags, percent_dropout, dimensions, perplexity,
   tsne_kmeansOUTPUT <- NULL
   adpOUTPUT <- NULL
   
-  if(is.null(percent_dropout)){
+  if (is.null(percent_dropout)){
     inputTags_tsne <- inputTags
   } else{
     dropouts <- rowSums(inputTags == 0)/ncol(inputTags)*100
