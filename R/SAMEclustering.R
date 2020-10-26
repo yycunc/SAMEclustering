@@ -240,7 +240,7 @@ SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
 #' @return a matrix of indiviudal clustering results is output, where each row represents the cluster results of each method.
 #'
 #' @author Ruth Huh <rhuh@live.unc.edu>, Yuchen Yang <yyuchen@email.unc.edu>, Yun Li <yunli@med.unc.edu>
-#' @references Ruth Huh, Yuchen Yang, Yun Li. SAME clustering, 2018
+#' @references Huh, R.†, Yang, Y.†, Jiang, Y., Shen, Y., Li, Y. (2020) SAME-clustering: Single-cell Aggregated Clustering via Mixture Model Ensemble. Nucleic Acids Research, 48: 86-95
 #' @examples
 #' # Load the example data data_SAME
 #' data("data_SAME")
