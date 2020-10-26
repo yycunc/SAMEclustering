@@ -6,6 +6,10 @@ Although several methods have been recently developed to cluster single-cell RNA
 SAMEclustering is maintained by Ruth Huh [rhuh@live.unc.edu], Yuchen Yang [yyuchen@email.unc.edu] and Yun Li [yun_li@med.unc.edu].
 
 ## News and Updates
+Oct 26, 2020
+* Version 1.00
+  + Fix the typing error in the message delivered during the running
+
 Dec 5, 2018
 * Version 0.99.0 released
   + First official release
