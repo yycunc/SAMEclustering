@@ -46,7 +46,7 @@ data_SAME$Zheng.expr[1:5, 1:5]
 Here we perform single-cell clustering using five popular methods, SC3, CIDR, Seurat, t-SNE + *k*-means and SIMLR. Genes expressed in less than 10% or more than 90% of cells are removed for CIDR, tSNE + k-means and SIMLR clustering. To improve the performance of cluster ensemble, we choose a maximally diverse set of four individual cluster solutions according to variation in pairwise Adjusted Rand Index (ARI).
 
 ```{r individual clustering for Zheng dataset, results='hide', fig.show="hide", warning=FALSE}
-cluster.result <- individual_clustering(inputTags = data_SAME$Zheng.expr, datatype = "count", percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, nPC.seurat = NULL, resolution = 0.9, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, SEED = 123)
+cluster.result <- individual_clustering(inputTags = data_SAME$Zheng.expr, mt_filter = TRUE, percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, nGene_filter = FALSE, nPC.seurat = NULL, resolution = 0.7, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, SEED = 123)
 ```
 
 The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each colunm represents a cell. User can also extend SAFE-clustering to other scRNA-seq clustering methods, by putting all clustering results into a $M$ by $N$ matrix with $M$ clustering methods and $N$ single cells.
