@@ -10,7 +10,7 @@
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom doRNG %dorng%
 #' @importFrom foreach foreach %dopar%
-sc3_SAME <- function(inputTags, gene_filter, svm_num_cells, SEED){
+sc3_SAME <- function(inputTags, gene_filter, svm_num_cells, save.results, SEED){
   exp_cell_exprs <- NULL
   sc3OUTPUT <- NULL
   
@@ -38,6 +38,10 @@ sc3_SAME <- function(inputTags, gene_filter, svm_num_cells, SEED){
     exp_cell_exprs <- sc3_run_svm(exp_cell_exprs, ks = optimal_K)
   }
   
+  if(save.results == TRUE){
+    save(exp_cell_exprs, file = "sc3OUTPUT.Rdata")
+  }
+  
   ### Exporting SC3 results
   p_Data <- colData(exp_cell_exprs)
   col_name <- paste("sc3_", optimal_K, "_clusters", sep = '')
@@ -46,7 +50,7 @@ sc3_SAME <- function(inputTags, gene_filter, svm_num_cells, SEED){
 }
 
 #' @importFrom cidr scDataConstructor determineDropoutCandidates wThreshold scDissim scPCA nPC scCluster
-cidr_SAME <- function(inputTags, percent_dropout, nPC.cidr, SEED){
+cidr_SAME <- function(inputTags, percent_dropout, nPC.cidr, save.results, SEED){
   set.seed(SEED)
   
   cidrOUTPUT <- NULL
@@ -75,12 +79,16 @@ cidr_SAME <- function(inputTags, percent_dropout, nPC.cidr, SEED){
   # The optimal clustering number is determined automatically
   cidrOUTPUT <- scCluster(cidrOUTPUT, nPC = nPC.cidr)
   
+  if(save.results == TRUE){
+    save(cidrOUTPUT, file = "cidrOUTPUT.Rdata")
+  }
+         
   return(cidrOUTPUT)
 }
 
 #' @import Seurat
 #' @importFrom methods .hasSlot
-seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, nPC.seurat, resolution, SEED){
+seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, nPC.seurat, resolution, save.results, SEED){
   seuratOUTPUT <- NULL
   
   # Initialize the Seurat object with the raw data (non-normalized data)
@@ -126,6 +134,10 @@ seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, n
     seurat_output <- t(as.matrix(as.numeric(seuratOUTPUT@active.ident)))
   }
   
+  if(save.results == TRUE){
+    save(seuratOUTPUT, file = "seuratOUTPUT.Rdata")
+  }
+  
   return(seurat_output)
 }
 
@@ -133,7 +145,7 @@ seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, n
 #' @importFrom ADPclust adpclust
 #' @importFrom S4Vectors var
 #' @importFrom stats kmeans
-tSNE_kmeans_SAME <- function(inputTags, percent_dropout, dimensions, perplexity, k.min, k.max, var_genes, SEED){
+tSNE_kmeans_SAME <- function(inputTags, percent_dropout, dimensions, perplexity, k.min, k.max, var_genes, save.results, SEED){
   input_lcpm <- NULL
   tsne_input <- NULL
   tsne_output <- NULL
@@ -172,11 +184,15 @@ tSNE_kmeans_SAME <- function(inputTags, percent_dropout, dimensions, perplexity,
   ### Clustering the cells by kmeans
   tsne_kmeansOUTPUT <- kmeans(tsne_output$Y, tsne_output$Y[adpOUTPUT$centers,], adpOUTPUT$nclust)
   
+  if(save.results == TRUE){
+    save(tsne_kmeansOUTPUT, file = "tsne_kmeansOUTPUT.Rdata")
+  }
+  
   return(tsne_kmeansOUTPUT)
 }
 
 #' @importFrom SIMLR SIMLR_Estimate_Number_of_Clusters SIMLR SIMLR_Large_Scale
-SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
+SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, save.results, SEED){
   set.seed(SEED)
   
   #X input is genebycell matrix
@@ -197,6 +213,10 @@ SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
     simlrOUTPUT <- SIMLR(log10(inputTags_simlr+1), c = k, cores.ratio = 0)
   } else {
     simlrOUTPUT <- SIMLR_Large_Scale(log10(inputTags_simlr+1), c = k)
+  }
+  
+  if(save.results == TRUE){
+    save(simlrOUTPUT, file = "simlrOUTPUT.Rdata")
   }
   
   return(simlrOUTPUT)
@@ -245,6 +265,8 @@ SIMLR_SAME <- function(inputTags, percent_dropout, k.min, k.max, SEED){
 #' @param diverse is a boolean parameter that defines whether to take a subset of 4 out of 5 most diverse sets of clustering. 
 #' Can only be implemented when all 5 booleans for individual methods are set to TRUE.
 #' Default is "TRUE".
+#' @param save.results is a boolean parameter that specifies whether to save the RData for each indiviudal clustering results.
+#' Default is "FALSE".
 #' @param SEED sets the seed of the random number generator. Setting the seed to a fixed value can
 #' produce reproducible clustering results.
 #'
@@ -265,7 +287,7 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
                                   SC3 = TRUE, gene_filter = FALSE, svm_num_cells = 5000, CIDR = TRUE, nPC.cidr = NULL,
                                   Seurat = TRUE, nGene_filter = TRUE, low.genes = 200, high.genes = 8000, nPC.seurat = NULL, resolution = 0.7, 
                                   tSNE = TRUE, dimensions = 3, perplexity = 30, tsne_min_cells = 200, tsne_min_perplexity = 10, var_genes = NULL,
-                                  SIMLR = TRUE, diverse = TRUE, SEED = 1){
+                                  SIMLR = TRUE, diverse = TRUE, save.results = FALSE, SEED = 1){
   
   cluster_number <- NULL
   cluster_results <- NULL
@@ -282,7 +304,7 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
   if(SC3 == TRUE){
     message("Performing SC3 clustering...")
     
-    sc3OUTPUT <- sc3_SAME(inputTags = inputTags, gene_filter = gene_filter, svm_num_cells = svm_num_cells, SEED = SEED)
+    sc3OUTPUT <- sc3_SAME(inputTags = inputTags, gene_filter = gene_filter, svm_num_cells = svm_num_cells, save.results = save.results, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(sc3OUTPUT), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(c(sc3OUTPUT)))
   }
@@ -292,7 +314,7 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
   if(CIDR == TRUE){
     message("Performing CIDR clustering...")
     
-    cidrOUTPUT <- cidr_SAME(inputTags = inputTags, percent_dropout = percent_dropout, nPC.cidr = nPC.cidr, SEED = SEED)
+    cidrOUTPUT <- cidr_SAME(inputTags = inputTags, percent_dropout = percent_dropout, nPC.cidr = nPC.cidr, save.results = save.results, SEED = SEED)
     
     if(is.null(nPC.cidr)) {
       nPC.cidr <- cidrOUTPUT@nPC
@@ -312,7 +334,7 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
     }
     
     seurat_output <- seurat_SAME(inputTags = inputTags, nGene_filter = nGene_filter, low.genes = low.genes, high.genes = high.genes, 
-                                 nPC.seurat = nPC.seurat, resolution = resolution, SEED = SEED)
+                                 nPC.seurat = nPC.seurat, resolution = resolution, save.results = save.results, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(seurat_output), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(!is.na(seurat_output)))
   }
@@ -327,8 +349,8 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
       perplexity = tsne_min_perplexity
     }
     
-    tsne_kmeansOUTPUT <- tSNE_kmeans_SAME(inputTags = inputTags, percent_dropout = percent_dropout, dimensions = dimensions,
-                                          perplexity = perplexity, k.min = 2, k.max = max(cluster_number), var_genes = var_genes, SEED = SEED)
+    tsne_kmeansOUTPUT <- tSNE_kmeans_SAME(inputTags = inputTags, percent_dropout = percent_dropout, dimensions = dimensions, perplexity = perplexity, 
+                                          k.min = 2, k.max = max(cluster_number), var_genes = var_genes, save.results = save.results, SEED = SEED)
     cluster_results <- rbind(cluster_results, matrix(c(tsne_kmeansOUTPUT$cluster), nrow = 1, byrow = TRUE))
     cluster_number <- c(cluster_number, max(as.numeric(tsne_kmeansOUTPUT$cluster)))
   }
@@ -337,7 +359,7 @@ individual_clustering <- function(inputTags, mt_filter = TRUE, mt.pattern = "^MT
   if(SIMLR == TRUE){
     message("Performing SIMLR clustering...")
     
-    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, percent_dropout = percent_dropout, k.min = 2, k.max = max(cluster_number), SEED = SEED)
+    simlrOUTPUT <- SIMLR_SAME(inputTags = inputTags, percent_dropout = percent_dropout, k.min = 2, k.max = max(cluster_number), save.results = save.results, SEED = SEED)
     cluster_results <- rbind(cluster_results, simlrOUTPUT$y$cluster)
   }
   
