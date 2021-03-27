@@ -85,7 +85,7 @@ seurat_SAME <- function(inputTags, nGene_filter = TRUE, low.genes, high.genes, n
   
   # Initialize the Seurat object with the raw data (non-normalized data)
   # Keep all genes expressed in >= 3 cells, keep all cells with >= 200 genes
-  seuratOUTPUT <- CreateSeuratObject(counts = inputTags, min.cells = 0, min.genes = low.genes, project = "single-cell clustering")
+  seuratOUTPUT <- CreateSeuratObject(counts = inputTags, min.cells = 0, min.genes = 0, project = "single-cell clustering")
   
   # Filter out the cells expressing too few or too many genes
   if (nGene_filter == TRUE){
