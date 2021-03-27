@@ -48,7 +48,8 @@ Here we perform single-cell clustering using five popular methods, SC3, CIDR, Se
 ```{r individual clustering for Zheng dataset, results='hide', fig.show="hide", warning=FALSE}
 cluster.result <- individual_clustering(inputTags = data_SAME$Zheng.expr, mt_filter = TRUE,
 percent_dropout = 10, SC3 = TRUE, CIDR = TRUE, nPC.cidr = NULL, Seurat = TRUE, nGene_filter = FALSE,
-nPC.seurat = NULL, resolution = 0.7, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, SEED = 123)
+nPC.seurat = NULL, resolution = 0.7, tSNE = TRUE, dimensions = 2, perplexity = 30, SIMLR = TRUE, diverse = TRUE, 
+save.results = FALSE, SEED = 123)
 ```
 
 The function *indiviual_clustering* will output a matrix, where each row represents the cluster results of each method, and each column represents a cell. User can also extend SAMEclustering to other scRNA-seq clustering methods, by putting all clustering results into a *M* by *N* matrix with *M* clustering methods and *N* single cells.
