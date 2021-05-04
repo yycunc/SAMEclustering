@@ -6,6 +6,10 @@ Although several methods have been recently developed to cluster single-cell RNA
 SAMEclustering is maintained by Ruth Huh [rhuh@live.unc.edu], Yuchen Yang [yyuchen@email.unc.edu] and Yun Li [yun_li@med.unc.edu].
 
 ## News and Updates
+Apr 4, 2021
+* Version 1.10
+  + Fix the some errors in Seurat executing.
+
 Oct 26, 2020
 * Version 1.00
   + The Seurat version used in SAMEclustering is updated to v3. Seurat v2 is no longer compatible
