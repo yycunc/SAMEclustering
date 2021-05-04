@@ -1,8 +1,8 @@
 Package: SAMEclustering
 Type: Package
 Title: SAME: Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble for Single-cell RNA-seq Data
-Version: 1.00
-Date: 2020-10-26
+Version: 1.10
+Date: 2021-04-04
 Author: Ruth Huh <rhuh@live.unc.edu>, Yuchen Yang <yyuchen@email.unc.edu>, Yun Li <yunli@med.unc.edu>
 Maintainer: Yuchen Yang <yyuchen@email.unc.edu>
 Description: SAME (Single-cell RNA-seq Aggregated clustering via Mixture model Ensemble): Cluster ensemble for single-cell RNA-seq data
